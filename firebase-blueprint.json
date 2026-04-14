@@ -1,0 +1,102 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "User Profile",
+      "description": "Stores user information and roles.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "name": { "type": "string" },
+        "phone": { "type": "string" },
+        "role": { "type": "string", "enum": ["farmer", "buyer", "fpo", "facilitator", "admin"] },
+        "orgId": { "type": "string" },
+        "createdAt": { "type": "number" }
+      },
+      "required": ["uid", "name", "role", "createdAt"]
+    },
+    "Pod": {
+      "title": "Farmer Pod",
+      "description": "A group of farmers organized for collective supply.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "village": { "type": "string" },
+        "cropFocus": { "type": "array" },
+        "createdBy": { "type": "string" },
+        "createdAt": { "type": "number" },
+        "memberIds": { "type": "array" },
+        "currentScore": { "type": "number" }
+      },
+      "required": ["id", "name", "village", "memberIds", "currentScore"]
+    },
+    "Contract": {
+      "title": "Supply Contract",
+      "description": "A collective supply agreement between a pod and a buyer.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "podId": { "type": "string" },
+        "buyerId": { "type": "string" },
+        "crop": { "type": "string" },
+        "season": { "type": "string" },
+        "expectedVolume": { "type": "number" },
+        "basePrice": { "type": "number" },
+        "status": { "type": "string", "enum": ["draft", "pending_pod", "active", "completed", "cancelled"] },
+        "createdAt": { "type": "number" }
+      },
+      "required": ["id", "podId", "buyerId", "crop", "status"]
+    },
+    "Delivery": {
+      "title": "Delivery Record",
+      "description": "A record of produce delivered by a farmer/pod.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "contractId": { "type": "string" },
+        "podId": { "type": "string" },
+        "farmerId": { "type": "string" },
+        "date": { "type": "number" },
+        "quantity": { "type": "number" },
+        "quality": { "type": "object" },
+        "loggedBy": { "type": "string" }
+      },
+      "required": ["id", "contractId", "podId", "quantity", "loggedBy"]
+    },
+    "Message": {
+      "title": "Message",
+      "description": "Chat message for communication.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "senderId": { "type": "string" },
+        "podId": { "type": "string" },
+        "content": { "type": "string" },
+        "createdAt": { "type": "number" }
+      },
+      "required": ["id", "senderId", "content", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{uid}": {
+      "schema": "UserProfile",
+      "description": "User profiles"
+    },
+    "/pods/{podId}": {
+      "schema": "Pod",
+      "description": "Farmer pods"
+    },
+    "/contracts/{contractId}": {
+      "schema": "Contract",
+      "description": "Supply contracts"
+    },
+    "/deliveries/{deliveryId}": {
+      "schema": "Delivery",
+      "description": "Delivery records"
+    },
+    "/pods/{podId}/messages/{messageId}": {
+      "schema": "Message",
+      "description": "Pod group chat messages"
+    }
+  }
+}

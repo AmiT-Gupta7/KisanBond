@@ -1,0 +1,78 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    // Collection: users
+    // Document ID: {uid}
+    // Fields: name, phone, role (enum), orgId, createdAt
+    //
+    // Collection: pods
+    // Document ID: {podId}
+    // Fields: name, village, cropFocus, memberIds (array), currentScore
+    //
+    // Collection: contracts
+    // Document ID: {contractId}
+    // Fields: podId, buyerId, crop, status (enum), basePrice
+    //
+    // Collection: deliveries
+    // Document ID: {deliveryId}
+    // Fields: contractId, podId, farmerId, quantity, quality (map)
+    //
+    // Collection: pods/{podId}/messages
+    // Document ID: {messageId}
+    // Fields: senderId, content, createdAt
+    // ===============================================================
+
+    // Helper Functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    function isAdmin() {
+      return isAuthenticated() && 
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+         request.auth.token.email == "guptaamit61739@gmail.com");
+    }
+
+    function isPodMember(podId) {
+      return isAuthenticated() && request.auth.uid in get(/databases/$(database)/documents/pods/$(podId)).data.memberIds;
+    }
+
+    // Rules
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow create: if isOwner(userId) && request.resource.data.role == 'farmer';
+      allow update: if isOwner(userId) || isAdmin();
+    }
+
+    match /pods/{podId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated(); // For prototype, allow anyone to create a pod
+      allow update: if isAdmin() || isPodMember(podId);
+    }
+
+    match /contracts/{contractId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated();
+    }
+
+    match /deliveries/{deliveryId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated();
+    }
+
+    match /pods/{podId}/messages/{messageId} {
+      allow read: if isPodMember(podId) || isAdmin();
+      allow create: if isPodMember(podId);
+    }
+  }
+}
